@@ -20,7 +20,7 @@ from dataloader import listfiles as ls
 from dataloader import listsceneflow as lt
 from models import hsm
 from utils import logger
-from utils.s3_sync import sync_open_dataset
+from utils import sync_dataset
 
 torch.backends.cudnn.benchmark = True
 
@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument('--loadmodel', default=None, help='weights path')
     parser.add_argument('--savemodel', default='./model', help='save path')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
+    parser.add_argument('--no-sync-dataset', action='store_true', help='Do not sync the dataset files')
     args = parser.parse_args()
     return args
 
@@ -149,7 +150,9 @@ def adjust_learning_rate(optimizer, epoch, input_args):
 
 def main():
     input_args = parse_args()
-    sync_open_dataset(input_args.database)
+    if not input_args.no_sync_dataset:
+        print('===== Syncing dataset =====')
+        sync_dataset(input_args.database)
 
     hdsm_model, optimizer = load_model(input_args)
 
