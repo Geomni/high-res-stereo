@@ -19,7 +19,7 @@ import numpy as np
 import time
 from models import hsm
 from utils import logger
-from utils.s3_sync import sync_dataset
+from utils.s3_sync import sync_open_dataset
 
 torch.backends.cudnn.benchmark = True
 MODEL = None
@@ -30,7 +30,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='HSM-Net')
     parser.add_argument('--maxdisp', type=int, default=384, help='maxium disparity')
     parser.add_argument('--logname', default='logname', help='log name')
-    parser.add_argument('--database', default='./hdsm_data', help='data path')
+    parser.add_argument('--database', default='./data', help='data path')
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train')
     parser.add_argument('--batchsize', type=int, default=28, help='samples per batch')
     parser.add_argument('--loadmodel', default=None, help='weights path')
@@ -147,7 +147,7 @@ def adjust_learning_rate(optimizer, epoch, input_args):
 
 def main():
     input_args = parse_args()
-    sync_dataset(input_args.database)
+    sync_open_dataset(input_args.database)
 
     load_model(input_args)
 

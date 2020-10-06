@@ -1,7 +1,7 @@
 import os
 
-def sync_dataset(dataset_dir):
-    target_dir = os.path.join(dataset_dir, 'hdsm')
-    os.makedirs(target_dir, exist_ok=True)
-    command = 'aws s3 sync "s3://autogpe-datasets//hdsm_small" "{}" --dryrun'.format(target_dir)
+def sync_open_dataset(dataset_dir):
+    os.makedirs(dataset_dir, exist_ok=True)
+    command = 'aws s3 sync "s3://autogpe-datasets/hdsm_small" "{}"'.format(dataset_dir)
+    print(command)
     os.system(command)
