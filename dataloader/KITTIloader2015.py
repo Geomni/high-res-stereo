@@ -16,8 +16,7 @@ def is_image_file(filename):
     return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
 
-def dataloader(filepath, typ='train'):
-
+def dataloader(filepath, split='train'):
     left_fold = 'image_2/'
     right_fold = 'image_3/'
     disp_L = 'disp_occ_0/'
@@ -26,11 +25,11 @@ def dataloader(filepath, typ='train'):
     image = sorted(image)
     imglist = [1, 3, 6, 20, 26, 35, 38, 41, 43, 44, 49, 60, 67, 70, 81, 84, 89, 97, 109, 119, 122,
                123, 129, 130, 132, 134, 141, 144, 152, 158, 159, 165, 171, 174, 179, 182, 184, 186, 187, 196]
-    if typ == 'train':
-        train = [image[i] for i in range(200) if i not in imglist]*100
-    elif typ == 'trainval':
-        train = [image[i] for i in range(200)]*80
-    val = [image[i] for i in imglist]
+    total = min(200, len(image))
+    train = [image[i] for i in range(total) if i not in imglist] * 100
+    if split == 'trainval':
+        train = [image[i] for i in range(total)]*80
+    val = [image[i] for i in imglist if i < total]
 
     left_train = [filepath+left_fold+img for img in train]
     right_train = [filepath+right_fold+img for img in train]
