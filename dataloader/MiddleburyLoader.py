@@ -29,6 +29,8 @@ def disparity_loader(path):
         data = Image.open(path)
         data = np.ascontiguousarray(data, dtype=np.float32)/256
         return data
+    elif '.npy' in path:
+        return np.load(path)
     else:
         return rp.readPFM(path)[0]
 
