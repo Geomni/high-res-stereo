@@ -28,26 +28,20 @@ def disparity_loader(path, flip_disp=False):
     if '.png' in path:
         data = Image.open(path)
         data = np.ascontiguousarray(data, dtype=np.float32) / 256
-        return data
     elif '.npy' in path:
-        return np.load(path)
+        data = np.load(path)
     else:
         data = rp.readPFM(path)[0]
-        if flip_disp:
-            data = np.flipud(data)
-        return data
+    if flip_disp:
+        data = np.flipud(data)
+    return data
 
 
 class myImageFloder(data.Dataset):
+
     def __init__(self, left, right, left_disparity, right_disparity=None, loader=default_loader,
-                 dploader=disparity_loader, rand_scale=None, rand_bright=None, order=0,
-                 occlusion_size=None):
-        if rand_scale is None:
-            rand_scale = [0.225, 0.6]
-        if rand_bright is None:
-            rand_bright = [0.5, 2.]
-        if occlusion_size is None:
-            occlusion_size = [50, 150]
+                 dploader=disparity_loader, rand_scale=[0.225, 0.6], rand_bright=[0.5, 2.], order=0,
+                 flip_disp_ud=False):
         self.left = left
         self.right = right
         self.disp_L = left_disparity
@@ -58,6 +52,7 @@ class myImageFloder(data.Dataset):
         self.rand_bright = rand_bright
         self.order = order
         self.occlusion_size = occlusion_size
+        self.flip_disp_ud = flip_disp_ud
 
     def __getitem__(self, index):
         left = self.left[index]
@@ -65,13 +60,13 @@ class myImageFloder(data.Dataset):
         left_img = self.loader(left)
         right_img = self.loader(right)
         disp_L = self.disp_L[index]
-        dataL = self.dploader(disp_L)
+        dataL = self.dploader(disp_L, self.flip_disp_ud)
         dataL[~np.isfinite(dataL)] = 0
         disp_R = None
 
         if not (self.disp_R is None):
             disp_R = self.disp_R[index]
-            dataR = self.dploader(disp_R)
+            dataR = self.dploader(disp_R, self.flip_disp_ud)
             dataR[~np.isfinite(dataR)] = 0
 
         max_h = 2048 // 4
