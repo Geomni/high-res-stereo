@@ -4,7 +4,6 @@ import argparse
 import os
 import random
 import time
-import PIL
 
 import numpy as np
 import torch
@@ -34,13 +33,17 @@ def parse_args():
     parser.add_argument('--database', default='./data', help='data path')
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train')
     parser.add_argument('--batchsize', type=int, default=28, help='samples per batch')
-    parser.add_argument('--loadmodel', default='s3://autogpe-model-training/high-res-stereo/initial_weights/final-768px.tar', help='weights path')
+    parser.add_argument('--loadmodel',
+                        default='s3://autogpe-model-training/high-res-stereo/initial_weights/final-768px.tar',
+                        help='weights path')
     parser.add_argument('--savemodel', default='./model', help='save path')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
     parser.add_argument('--no-sync-dataset', action='store_true', help='Do not sync the dataset files')
     parser.add_argument('--persist_to_s3', action='store_true', help='Sync the output models to s3')
-    parser.add_argument('--experiment_name', type=str, default='default', help='experiment name when persisting model to s3')
-    parser.add_argument('--use_tiny_dataset', action='store_true', help='use a tiny version of the datasets for testing purposes')
+    parser.add_argument('--experiment_name', type=str, default='default',
+                        help='experiment name when persisting model to s3')
+    parser.add_argument('--use_tiny_dataset', action='store_true',
+                        help='use a tiny version of the datasets for testing purposes')
     args = parser.parse_args()
     return args
 
@@ -108,19 +111,20 @@ def init_dataloader(input_args):
     all_left_img, all_right_img, all_left_disp, _ = ls.dataloader('%s/eth3d/' % input_args.database)
     loader_eth3d = DA.myImageFloder(all_left_img, all_right_img, all_left_disp, rand_scale=rand_scale, order=0)
 
-    all_left_img, all_right_img, all_left_disp, all_right_disp = lidar_dataloader('%s/lidar-hdsm-dataset/' %input_args.database)
+    all_left_img, all_right_img, all_left_disp, all_right_disp = lidar_dataloader(
+        '%s/lidar-hdsm-dataset/' % input_args.database)
     loader_lidar = DA.myImageFloder(all_left_img, all_right_img, all_left_disp, right_disparity=all_right_disp,
-                                    rand_scale=[0.5, 1.1*scale_factor], order=2, flip_disp_ud=True,
+                                    rand_scale=[0.5, 1.1 * scale_factor], order=2, flip_disp_ud=True,
                                     occlusion_size=[10, 25])
 
     data_inuse = torch.utils.data.ConcatDataset([loader_carla] * 10 +
-                                                [loader_mb] * 150 + # 71 pairs
+                                                [loader_mb] * 150 +  # 71 pairs
                                                 [loader_scene] +  # 39K pairs 960x540
                                                 [loader_kitti15] +
                                                 [loader_kitti12] * 24 +
                                                 [loader_eth3d] * 300 +
-                                                [loader_lidar] ) # 25K pairs
-                                                                 # airsim ~750
+                                                [loader_lidar])  # 25K pairs
+    # airsim ~750
     train_dataloader = torch.utils.data.DataLoader(data_inuse, batch_size=batch_size, shuffle=True,
                                                    num_workers=batch_size, drop_last=True, worker_init_fn=_init_fn)
     print('%d batches per epoch' % (len(data_inuse) // batch_size))
@@ -218,7 +222,6 @@ def main():
 
                 if input_args.persist_to_s3:
                     persist_saved_models(input_args.experiment_name, input_args.savemodel)
-
 
         log.scalar_summary('train/loss', total_train_loss / len(train_img_loader), epoch)
         torch.cuda.empty_cache()
