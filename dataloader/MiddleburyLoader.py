@@ -83,7 +83,7 @@ class myImageFloder(data.Dataset):
         random_jpeg_left = np.random.binomial(1, 0.5)
         random_jpeg_right = np.random.binomial(1, 0.5)
         if random_jpeg_left or random_jpeg_right:
-            random_jpeg = qf = np.random.randint(80, 100)
+            random_jpeg = np.random.randint(80, 100)
 
         left_img = torchvision.transforms.functional.adjust_brightness(left_img, random_brightness[0])
         left_img = torchvision.transforms.functional.adjust_gamma(left_img, random_gamma[0])
