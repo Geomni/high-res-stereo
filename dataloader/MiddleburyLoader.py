@@ -88,13 +88,13 @@ class myImageFloder(data.Dataset):
         left_img = torchvision.transforms.functional.adjust_brightness(left_img, random_brightness[0])
         left_img = torchvision.transforms.functional.adjust_gamma(left_img, random_gamma[0])
         left_img = torchvision.transforms.functional.adjust_contrast(left_img, random_contrast[0])
-        if random_jpeg_left and random_jpeg < 100:
+        if random_jpeg_left:
             left_img = flow_transforms.JPEGcompression(left_img, random_jpeg)
 
         right_img = torchvision.transforms.functional.adjust_brightness(right_img, random_brightness[1])
         right_img = torchvision.transforms.functional.adjust_gamma(right_img, random_gamma[1])
         right_img = torchvision.transforms.functional.adjust_contrast(right_img, random_contrast[1])
-        if random_jpeg_right and random_jpeg < 100:
+        if random_jpeg_right:
             right_img = flow_transforms.JPEGcompression(right_img, random_jpeg)
         
         right_img = np.asarray(right_img)
