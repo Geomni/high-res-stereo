@@ -29,7 +29,7 @@ torch.backends.cudnn.benchmark = True
 
 def parse_args():
     parser = argparse.ArgumentParser(description='HSM-Net')
-    parser.add_argument('--maxdisp', type=int, default=128, help='maxium disparity')
+    parser.add_argument('--maxdisp', type=int, default=384, help='maxium disparity')
     parser.add_argument('--logname', default='logname', help='log name')
     parser.add_argument('--database', default='./data', help='data path')
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train')
