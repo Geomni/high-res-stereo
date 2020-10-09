@@ -98,6 +98,6 @@ class RandomVdisp(object):
 
 def JPEGcompression(image, quality):
     outputIoStream = BytesIO()
-    image.save(outputIoStream, "JPEG", quality=quality, optimice=True)
+    image.save(outputIoStream, "JPEG", quality=quality)
     outputIoStream.seek(0)
     return Image.open(outputIoStream)
