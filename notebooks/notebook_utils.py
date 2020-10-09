@@ -19,9 +19,16 @@ def get_lidar_train_list():
     return json_str.split('\r\n')
 
 
-def list_s3(prefix):
-    objs = CLIENT.list_objects_v2(Bucket='autogpe-datasets', Prefix=prefix, Delimiter='/')
+def list_s3(prefix, delim='/'):
+    objs = CLIENT.list_objects_v2(Bucket='autogpe-datasets', Prefix=prefix, Delimiter=delim)
     return objs
+
+def download_file_s3(s3_key, out_key):
+    if os.path.exists(out_key):
+        print('Exists-skip: {} to {}'.format(s3_key, out_key))
+        return
+    print('download: {} to {}'.format(s3_key, out_key))
+    CLIENT.download_file('autogpe-datasets', s3_key, out_key)
 
 
 def download_sample(s3_key, out_folder):
