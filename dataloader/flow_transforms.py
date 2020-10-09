@@ -1,10 +1,12 @@
 from __future__ import division
+from io import BytesIO
 import torch
 import random
 import numpy as np
 import numbers
 import pdb
 import cv2
+from PIL import Image
 
 
 class Compose(object):
@@ -92,3 +94,10 @@ class RandomVdisp(object):
         trans_mat = np.float32([[1, 0, 0], [0, 1, px2]])
         inputs[1] = cv2.warpAffine(inputs[1], trans_mat, inputs[1].shape[1::-1], flags=cv2.INTER_LINEAR)
         return inputs, target
+
+
+def JPEGcompression(image, quality):
+    outputIoStream = BytesIO()
+    image.save(outputIoStream, "JPEG", quality=quality)
+    outputIoStream.seek(0)
+    return Image.open(outputIoStream)
