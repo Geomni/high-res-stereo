@@ -2,6 +2,7 @@ opencv-python-headless==4.4.0.44
 matplotlib==3.3.2
 boto3==1.15.14
 texttable==1.6.3
+tensorboard==2.3.0
 # The following packages are expected to be installed as pre-requisites
 # numpy==1.19.1
 # torch==1.6.0
