@@ -4,6 +4,7 @@ import argparse
 import os
 import random
 import time
+import PIL
 
 import numpy as np
 import torch
@@ -28,17 +29,18 @@ torch.backends.cudnn.benchmark = True
 
 def parse_args():
     parser = argparse.ArgumentParser(description='HSM-Net')
-    parser.add_argument('--maxdisp', type=int, default=384, help='maxium disparity')
+    parser.add_argument('--maxdisp', type=int, default=128, help='maxium disparity')
     parser.add_argument('--logname', default='logname', help='log name')
     parser.add_argument('--database', default='./data', help='data path')
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train')
     parser.add_argument('--batchsize', type=int, default=28, help='samples per batch')
-    parser.add_argument('--loadmodel', default=None, help='weights path')
+    parser.add_argument('--loadmodel', default='s3://autogpe-model-training/high-res-stereo/initial_weights/final-768px.tar', help='weights path')
     parser.add_argument('--savemodel', default='./model', help='save path')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
     parser.add_argument('--no-sync-dataset', action='store_true', help='Do not sync the dataset files')
     parser.add_argument('--persist_to_s3', action='store_true', help='Sync the output models to s3')
     parser.add_argument('--experiment_name', type=str, default='default', help='experiment name when persisting model to s3')
+    parser.add_argument('--use_tiny_dataset', action='store_true', help='use a tiny version of the datasets for testing purposes')
     args = parser.parse_args()
     return args
 
@@ -51,7 +53,16 @@ def load_model(input_args):
 
     # load model
     if input_args.loadmodel is not None:
-        pretrained_dict = torch.load(input_args.loadmodel)
+        base_weights = input_args.loadmodel
+        if base_weights.startswith('s3://'):
+            filename = os.path.basename(base_weights)
+            model_path = f'{input_args.savemodel}/initial_weights/{filename}'
+            if not os.path.exists(model_path):
+                command = f'aws s3 cp {base_weights} {model_path}'
+                os.system(command)
+            base_weights = model_path
+
+        pretrained_dict = torch.load(base_weights)
         pretrained_dict['state_dict'] = {k: v for k, v in pretrained_dict['state_dict'].items() if ('disp' not in k)}
         model.load_state_dict(pretrained_dict['state_dict'], strict=False)
 
@@ -131,10 +142,10 @@ def train(model, optimizer, maxdisp, img_l, img_r, disp_l):
 
     optimizer.zero_grad()
     stacked, entropy = model(img_l, img_r)
-    loss = (64. / 85) * F.smooth_l1_loss(stacked[0][mask], disp_true[mask], size_average=True) + \
-           (16. / 85) * F.smooth_l1_loss(stacked[1][mask], disp_true[mask], size_average=True) + \
-           (4. / 85) * F.smooth_l1_loss(stacked[2][mask], disp_true[mask], size_average=True) + \
-           (1. / 85) * F.smooth_l1_loss(stacked[3][mask], disp_true[mask], size_average=True)
+    loss = (64. / 85) * F.smooth_l1_loss(stacked[0][mask], disp_true[mask], reduction='mean') + \
+           (16. / 85) * F.smooth_l1_loss(stacked[1][mask], disp_true[mask], reduction='mean') + \
+           (4. / 85) * F.smooth_l1_loss(stacked[2][mask], disp_true[mask], reduction='mean') + \
+           (1. / 85) * F.smooth_l1_loss(stacked[3][mask], disp_true[mask], reduction='mean')
     loss.backward()
     optimizer.step()
     vis = {'output3': stacked[0].detach().cpu().numpy(),
@@ -162,7 +173,7 @@ def main():
     input_args = parse_args()
     if not input_args.no_sync_dataset:
         print('===== Syncing dataset =====')
-        sync_dataset(input_args.database)
+        sync_dataset(input_args.database, tiny=input_args.use_tiny_dataset)
         print('===== Data synced =========')
 
     hdsm_model, optimizer = load_model(input_args)
@@ -184,8 +195,8 @@ def main():
             if total_iters % 10 == 0:
                 log.scalar_summary('train/loss_batch', loss, total_iters)
             if total_iters % 100 == 0:
-                log.image_summary('train/left', imgL_crop[0:1], total_iters)
-                log.image_summary('train/right', imgR_crop[0:1], total_iters)
+                log.image_summary('train/left', imgL_crop[0:1], total_iters, is_image=True)
+                log.image_summary('train/right', imgR_crop[0:1], total_iters, is_image=True)
                 log.image_summary('train/gt0', disp_crop_L[0:1], total_iters)
                 log.image_summary('train/entropy', vis['entropy'][0:1], total_iters)
                 log.histo_summary('train/disparity_hist', vis['output3'], total_iters)
