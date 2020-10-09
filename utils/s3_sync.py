@@ -36,9 +36,9 @@ def sync_lidar_dataset(dataset_dir, tiny=False):
     regions = {
         'Demo-Dallas': [1, 2, 3],
         'Demo-LA-River': [1, 2, 3],
-        'Demo-Manchester': [1, 2, 3],
-        'Demo-Richmond': list(range(1, 14)),
-        'Demo-Seattle': [1, 2, 3],
+        'Demo-Manchester': [1, 2, 3, 4],
+        'Demo-Richmond': list(range(1, 16)),
+        'Demo-Seattle': [1, 2, 3, 4],
     }
 
     tlds = []
