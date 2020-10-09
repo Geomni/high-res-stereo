@@ -8,7 +8,7 @@ Description:
 """
 
 
-from tensorboard.compat.proto.summary_pb2 import HistogramProto
+from torch.utils.tensorboard.summary import HistogramProto
 from torch.utils.tensorboard.writer import FileWriter
 from torch.utils.tensorboard.summary import Summary
 import torch
